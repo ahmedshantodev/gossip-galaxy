@@ -18,8 +18,6 @@ import { IoWarningOutline } from "react-icons/io5";
 // fire base
 import {
   getAuth,
-  createUserWithEmailAndPassword,
-  sendEmailVerification,
   signInWithEmailAndPassword,
 } from "firebase/auth";
 // react loader

@@ -18,7 +18,7 @@ function App() {
   let router = createBrowserRouter(
     createRoutesFromElements(
       <Route path="/" element={<RootLayout />}>
-        <Route path="/sign-up" element={<SignUp />} />
+        <Route path="/" element={<SignUp />} />
         <Route path="/sign-in" element={<Signin />} />
         <Route path="/verification" element={<Verification />} />
         <Route path="/home" element={<Home />} />
