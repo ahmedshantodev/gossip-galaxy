@@ -1,18 +1,36 @@
 import React, { useState } from "react";
+// components
 import Flex from "../components/layout/Flex";
 import Image from "../components/layout/Image";
 import Heading from "../components/layout/Heading";
 import Button from "../components/layout/Button";
 import Paragraph from "../components/layout/Paragraph";
 import Input from "../components/layout/Input";
+// images
 import triangle from "../../public/image/triangle.png";
 import google from "../../public/image/google logo.png";
 import facebook from "../../public/image/facebook logo.png";
 import messege from "../../public/image/messegelogo.png";
+// react icons
 import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
 import { IoWarningOutline } from "react-icons/io5";
+// fire base
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+} from "firebase/auth";
+// react loader
+import { ColorRing } from "react-loader-spinner";
+// react toastify
+import { toast } from "react-toastify";
+// react router dom
+import { Link, useNavigate } from "react-router-dom";
 
 const SignUp = () => {
+  const auth = getAuth();
+  let navigate = useNavigate();
+
   const [passwordShow, setPasswordShow] = useState(false);
   const [registrationData, setRegistrationData] = useState({
     name: "",
@@ -25,6 +43,8 @@ const SignUp = () => {
     email: "",
     password: "",
   });
+
+  const [loadingButton, setLoadingButton] = useState(false);
 
   const handleChange = (e) => {
     setRegistrationData({
@@ -54,6 +74,38 @@ const SignUp = () => {
       });
     } else if (registrationData.password.length < 6) {
       setRegistrationError({ password: "password be me greater then 6" });
+    } else {
+      setLoadingButton(true);
+      createUserWithEmailAndPassword(
+        auth,
+        registrationData.email,
+        registrationData.password
+      )
+        .then((userCredential) => {
+          setLoadingButton(false);
+          setRegistrationData({ name: "", email: "", password: "" });
+          sendEmailVerification(auth.currentUser).then(() => {
+            toast.success(
+              "Registration Successfull, Please check your email for verification",
+              {
+                position: "bottom-center",
+                autoClose: 3000,
+                theme: "dark",
+              }
+            );
+            navigate("/sign-in");
+          });
+        })
+        .catch((error) => {
+          const errorMessage = error.message;
+          setLoadingButton(false);
+          if (errorMessage.includes("auth/email-already-in-use")) {
+            setRegistrationError({
+              ...registrationError,
+              email: "Email Already Exists",
+            });
+          }
+        });
     }
   };
 
@@ -128,12 +180,13 @@ const SignUp = () => {
             <div className="w-[500px] mt-12">
               <div className="relative">
                 <Input
+                  value={registrationData.name}
                   onChange={handleChange}
                   type={"text"}
                   name={"name"}
                   placeholder={"Full Name"}
                   className={
-                    "w-full mb-6 capitalize border-b-[1px] border-[#A1A1A1] py-4 text-sm placeholder:text-[#A1A1A1] font-medium font-poppins focus:outline-none focus:border-[blue]"
+                    "w-full mb-6 border-b-[1px] border-[#A1A1A1] py-4 text-sm placeholder:text-[#A1A1A1] font-medium font-poppins focus:outline-none focus:border-[blue]"
                   }
                 />
                 {registrationError.name && (
@@ -148,12 +201,13 @@ const SignUp = () => {
               </div>
               <div className="relative">
                 <Input
+                  value={registrationData.email}
                   onChange={handleChange}
                   type={"text"}
                   name={"email"}
                   placeholder={"email address"}
                   className={
-                    "w-full mb-6 capitalize border-b-[1px] border-[#A1A1A1] py-4 text-sm placeholder:text-[#A1A1A1] font-medium font-poppins focus:outline-none focus:border-[blue]"
+                    "w-full mb-6 border-b-[1px] border-[#A1A1A1] py-4 text-sm placeholder:text-[#A1A1A1] font-medium font-poppins focus:outline-none focus:border-[blue]"
                   }
                 />
                 {registrationError.email && (
@@ -168,12 +222,13 @@ const SignUp = () => {
               </div>
               <div className="mb-10 relative">
                 <Input
+                  value={registrationData.password}
                   onChange={handleChange}
                   type={passwordShow ? "text" : "password"}
                   name={"password"}
                   placeholder={"password"}
                   className={
-                    "w-full capitalize border-b-[1px] border-[#A1A1A1] py-4 text-sm placeholder:text-[#A1A1A1] font-medium font-poppins focus:outline-none focus:border-[blue]"
+                    "w-full border-b-[1px] border-[#A1A1A1] py-4 text-sm placeholder:text-[#A1A1A1] font-medium font-poppins focus:outline-none focus:border-[blue]"
                   }
                 />
                 {registrationError.password && (
@@ -197,21 +252,50 @@ const SignUp = () => {
                   />
                 )}
               </div>
-              <Button
-                onClick={handleSubmit}
-                className={
-                  "w-full text-center bg-primary-color text-white font-semibold text-base font-poppins py-3 rounded-md"
-                }
-              >
-                Create Your Account
-              </Button>
-              <Button
+              {loadingButton ? (
+                <Button
+                  onClick={handleSubmit}
+                  className={
+                    "w-full flex justify-center items-center gap-x-3 mt-5 text-center bg-primary-color text-white font-semibold text-base font-poppins py-[9px] rounded-md mb-5"
+                  }
+                >
+                  Creatting Your Account
+                  <ColorRing
+                    visible={true}
+                    height="30"
+                    width="30"
+                    ariaLabel="color-ring-loading"
+                    wrapperStyle={{}}
+                    wrapperClass="color-ring-wrapper"
+                    colors={[
+                      "#e15b64",
+                      "#f47e60",
+                      "#f8b26a",
+                      "#abbd81",
+                      "#849b87",
+                    ]}
+                  />
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleSubmit}
+                  className={
+                    "w-full text-center bg-primary-color text-white font-semibold text-base font-poppins py-3 rounded-md mb-5"
+                  }
+                >
+                  Create Your Account
+                </Button>
+              )}
+
+              <Link
+                to={"/sign-in"}
                 className={
                   "text-sm text-[#A1A1A1] font-semibold font-poppins hover:text-primary-color duration-300 mt-5 ml-auto"
                 }
               >
-                Already have an account? Login
-              </Button>
+                Already have an account?{" "}
+                <span className="text-primary-color ml-1">Login</span>
+              </Link>
             </div>
           </div>
         </Flex>
